@@ -23,21 +23,24 @@ jobs:
     - name: Get dependencies
       run: flutter pub get
       
+    - name: Create Android resources
+      run: |
+        mkdir -p android/app/src/main/res/mipmap-anydpi-v26
+        echo '<?xml version="1.0" encoding="utf-8"?><adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android"><background android:drawable="@color/purple_500"/><foreground android:drawable="@drawable/ic_launcher_foreground"/></adaptive-icon>' > android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+        echo '<?xml version="1.0" encoding="utf-8"?><vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108"><path android:fillColor="#FFFFFF" android:pathData="M54,30 L54,78 M30,54 L78,54" android:strokeWidth="8" android:strokeColor="#FFFFFF"/></vector>' > android/app/src/main/res/drawable/ic_launcher_foreground.xml
+        
     - name: Build debug APK
       run: flutter build apk --debug
       
-    - name: Build release APK  
+    - name: Build release APK
       run: flutter build apk --release
-      
-    - name: List APK files
-      run: ls -la build/app/outputs/flutter-apk/
       
     - name: Upload debug APK
       uses: actions/upload-artifact@v4
       with:
         name: debug-apk
         path: build/app/outputs/flutter-apk/app-debug.apk
-        
+
     - name: Upload release APK
       uses: actions/upload-artifact@v4
       with:

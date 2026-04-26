@@ -250,7 +250,7 @@ final customModelIdProvider = StateProvider<String>((ref) => '');
 
 final currentPersonaIdProvider = StateProvider<String?>((ref) => null);
 
-enum ViewMode { chat, terminal, files, processes, editor, performance }
+enum ViewMode { chat, terminal, files, processes, performance }
 
 final currentViewModeProvider = StateProvider<ViewMode>((ref) => ViewMode.chat);
 

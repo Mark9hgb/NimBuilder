@@ -11,7 +11,8 @@ buildscript {
     }
 }
 
-rootProject.allProjects {
+rootProject.buildDir = '../build'
+allprojects {
     repositories {
         google()
         mavenCentral()
@@ -19,8 +20,22 @@ rootProject.allProjects {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply from: "$rootDir/flutter.gradle"
 
 android {
     namespace 'com.nimbuilder.app'
     compileSdk 34
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
 }
+
+flutter.buildDir = '../build'

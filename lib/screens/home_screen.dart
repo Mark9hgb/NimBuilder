@@ -8,7 +8,6 @@ import 'screens/chat_screen.dart';
 import 'screens/terminal_view.dart';
 import 'screens/file_explorer_screen.dart';
 import 'screens/process_manager_screen.dart';
-import 'screens/code_editor_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/performance_profiler_screen.dart';
 import 'theme/app_theme.dart';
@@ -138,16 +137,14 @@ class HomeScreen extends ConsumerWidget {
         return const ChatScreen();
       case ViewMode.terminal:
         return const TerminalView();
-      case ViewMode.files:
-        return const FileExplorerScreen();
-      case ViewMode.processes:
-        return const ProcessManagerScreen();
-      case ViewMode.editor:
-        return const CodeEditorScreen();
-      case ViewMode.performance:
-        return const PerformanceProfilerScreen();
-    }
+case ViewMode.files:
+      return const FileExplorerScreen();
+    case ViewMode.processes:
+      return const ProcessManagerScreen();
+    case ViewMode.performance:
+      return const PerformanceProfilerScreen();
   }
+}
 
   Widget _buildNavigationRail(WidgetRef ref, ViewMode mode) {
     return Container(
@@ -188,22 +185,17 @@ class HomeScreen extends ConsumerWidget {
             selectedIcon: Icon(Icons.folder),
             label: 'Files',
           ),
-          NavigationDestination(
-            icon: Icon(Icons.memory_outlined),
-            selectedIcon: Icon(Icons.memory),
-            label: 'Processes',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.code_outlined),
-            selectedIcon: Icon(Icons.code),
-            label: 'Editor',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.analytics_outlined),
-            selectedIcon: Icon(Icons.analytics),
-            label: 'Performance',
-          ),
-        ],
+NavigationDestination(
+    icon: Icon(Icons.memory_outlined),
+    selectedIcon: Icon(Icons.memory),
+    label: 'Processes',
+  ),
+  NavigationDestination(
+    icon: Icon(Icons.analytics_outlined),
+    selectedIcon: Icon(Icons.analytics),
+    label: 'Performance',
+  ),
+],
       ),
     );
   }
