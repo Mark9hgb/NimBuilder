@@ -1,0 +1,41 @@
+# Build artifacts
+build/
+.app.dill
+
+# Flutter packages
+.packages
+.pub-cache/
+.pub/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Android
+*.jks
+*.keystore
+/android/app/*.jks
+/android/app/*.key
+/android/app/*.png
+/android/app/google-services.json
+
+# iOS
+*.ipa
+*.dSYM.zip
+
+# Logs
+*.log
+
+# Local config
+.local.properties
+.android/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+test/.test_result/
