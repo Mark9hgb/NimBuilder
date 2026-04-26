@@ -18,17 +18,7 @@ dependencies:
   android_intent_plus: ^5.0.2
   flutter_services_binding: ^0.1.0
 
-  # Terminal Emulation
-  xterm: ^4.0.0
-
-  # State Management
-  flutter_riverpod: ^2.5.1
-  riverpod_annotation: ^2.3.5
-
-  # UI / Design
-  flutter_animate: ^4.5.0
-  flutter_highlight: ^0.7.0
-  highlight: ^0.7.0
+# Utilities
   google_fonts: ^6.2.1
   icons_plus: ^5.0.0
 

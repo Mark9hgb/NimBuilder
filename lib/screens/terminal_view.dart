@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:xterm/xterm.dart';
 import '../providers/chat_providers.dart';
+import '../services/terminal_service.dart';
 import '../theme/app_theme.dart';
 
 class TerminalView extends ConsumerStatefulWidget {
@@ -14,54 +14,51 @@ class TerminalView extends ConsumerStatefulWidget {
 }
 
 class _TerminalViewState extends ConsumerState<TerminalView> {
-  late TerminalController _terminalController;
-  late Terminal _terminal;
   final TextEditingController _inputController = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
   final ScrollController _scrollController = ScrollController();
+  final List<String> _output = [];
   final List<String> _history = [];
   int _historyIndex = -1;
 
   @override
   void initState() {
     super.initState();
-    _terminal = Terminal(
-      maxLines: 10000,
-    );
-    _terminalController = TerminalController();
-    _initializeTerminal();
+    _output.add('NIM Builder Terminal');
+    _output.add('========================');
+    _output.add('Type commands and press Enter to execute');
+    _output.add('');
+    _output.add('\$ ');
   }
 
-  Future<void> _initializeTerminal() async {
-    final terminalService = ref.read(terminalServiceProvider);
-    
-    _terminal.write('NIM Builder Terminal\r\n');
-    _terminal.write('─────────────────────────\r\n');
-    _terminal.write('Type commands and press Enter to execute\r\n\r\n');
-    
-    _terminal.onOutput = (data) {
-      _executeCommand(data);
-    };
+  @override
+  void dispose() {
+    _inputController.dispose();
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _executeCommand(String command) async {
-    final trimmed = command.trim();
-    if (trimmed.isEmpty) return;
-
-    _terminal.write('\r\n');
-    _history.add(trimmed);
-    _historyIndex = _history.length;
-    
-    final terminalService = ref.read(terminalServiceProvider);
-    final result = await terminalService.executeShellCommand(trimmed);
-    
-    _terminal.write(result.output);
-    if (!result.output.endsWith('\r\n')) {
-      _terminal.write('\r\n');
+    if (command.trim().isEmpty) {
+      _output.add('\$ ');
+      return;
     }
-    _terminal.write('\r\n\$ ');
-    
+
+    _history.add(command);
+    _historyIndex = _history.length;
+
+    _output.add('\$ $command');
+
+    final terminalService = ref.read(terminalServiceProvider);
+    final result = await terminalService.executeShellCommand(command);
+
+    _output.add(result.output);
+    if (!result.output.endsWith('\n')) {
+      _output.add('');
+    }
+    _output.add('\$ ');
+
     _scrollToBottom();
+    setState(() {});
   }
 
   void _scrollToBottom() {
@@ -69,25 +66,16 @@ class _TerminalViewState extends ConsumerState<TerminalView> {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
-          duration: AppAnimations.fast,
-          curve: AppAnimations.defaultCurve,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
         );
       }
     });
   }
 
-  void _handleSubmit() {
-    final command = _inputController.text;
-    if (command.isEmpty) return;
-    
-    _terminal.write('\$ $command\r\n');
-    _inputController.clear();
-    _executeCommand(command);
-  }
-
   void _navigateHistory(bool up) {
     if (_history.isEmpty) return;
-    
+
     if (up) {
       if (_historyIndex > 0) {
         _historyIndex--;
@@ -108,26 +96,13 @@ class _TerminalViewState extends ConsumerState<TerminalView> {
   }
 
   @override
-  void dispose() {
-    _terminalController.dispose();
-    _inputController.dispose();
-    _focusNode.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final viewMode = ref.watch(currentViewModeProvider);
-
     return Scaffold(
       backgroundColor: AppTheme.terminalBackground,
       appBar: _buildAppBar(),
       body: Column(
         children: [
-          Expanded(
-            child: _buildTerminalOutput(),
-          ),
+          Expanded(child: _buildTerminalOutput()),
           _buildInputBar(),
         ],
       ),
@@ -148,15 +123,21 @@ class _TerminalViewState extends ConsumerState<TerminalView> {
         IconButton(
           icon: const Icon(Icons.clear_all, color: AppTheme.terminalText),
           onPressed: () {
-            _terminal.buffer.clear();
-            _terminal.write('\x1B[2J\x1B[H');
+            setState(() {
+              _output.clear();
+              _output.add('Terminal cleared');
+              _output.add('\$ ');
+            });
           },
           tooltip: 'Clear',
         ),
         IconButton(
-          icon: const Icon(Icons.vertical_split, color: AppTheme.terminalText),
-          onPressed: _showSidePanel,
-          tooltip: 'Side panel',
+          icon: const Icon(Icons.refresh, color: AppTheme.terminalText),
+          onPressed: () {
+            _output.add('Reset terminal');
+            _output.add('\$ ');
+          },
+          tooltip: 'Reset',
         ),
       ],
     );
@@ -164,18 +145,24 @@ class _TerminalViewState extends ConsumerState<TerminalView> {
 
   Widget _buildTerminalOutput() {
     return GestureDetector(
-      onTap: () => _focusNode.requestFocus(),
+      onTap: () => FocusScope.of(context).unfocus(),
       child: Container(
         color: AppTheme.terminalBackground,
-        child: TerminalView(
-          terminal: _terminal,
-          controller: _terminalController,
-          autofocus: true,
-          backgroundOpacity: 0,
-          textStyle: AppTheme.terminalTextStyle,
-          padding: const EdgeInsets.all(16),
-          onSecondaryTapDown: (details, offset) {
-            _showContextMenu(details.globalPosition);
+        padding: const EdgeInsets.all(16),
+        child: ListView.builder(
+          controller: _scrollController,
+          itemCount: _output.length,
+          itemBuilder: (context, index) {
+            return SelectableText(
+              _output[index],
+              style: GoogleFonts.firaCode(
+                fontSize: 14,
+                color: _output[index].startsWith('\$ ')
+                    ? AppTheme.terminalPrompt
+                    : AppTheme.terminalText,
+                height: 1.4,
+              ),
+            );
           },
         ),
       ),
@@ -207,7 +194,6 @@ class _TerminalViewState extends ConsumerState<TerminalView> {
             Expanded(
               child: TextField(
                 controller: _inputController,
-                focusNode: _focusNode,
                 style: GoogleFonts.firaCode(
                   color: AppTheme.terminalText,
                   fontSize: 14,
@@ -221,9 +207,7 @@ class _TerminalViewState extends ConsumerState<TerminalView> {
                 ),
                 cursorColor: AppTheme.terminalText,
                 keyboardType: TextInputType.text,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => _handleSubmit(),
-                onChanged: (_) => _historyIndex = _history.length,
+                onSubmitted: _executeCommand,
               ),
             ),
             IconButton(
@@ -233,112 +217,12 @@ class _TerminalViewState extends ConsumerState<TerminalView> {
                     ? Colors.grey 
                     : AppTheme.terminalText,
               ),
-              onPressed: _inputController.text.isEmpty ? null : _handleSubmit,
+              onPressed: _inputController.text.isEmpty 
+                  ? null 
+                  : () => _executeCommand(_inputController.text),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showContextMenu(Offset position) {
-    final overlay = Overlay.of(context);
-    final renderBox = context.findRenderObject() as RenderBox;
-    final offset = renderBox.globalToLocal(position);
-
-    final entry = OverlayEntry(
-      builder: (context) => Positioned(
-        left: offset.dx,
-        top: offset.dy,
-        child: Material(
-          color: Colors.transparent,
-          child: PopupMenuButton<String>(
-            icon: const Icon(Icons.add_moderator),
-            offset: Offset.zero,
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'clear', child: Text('Clear')),
-              const PopupMenuItem(value: 'copy', child: Text('Copy')),
-              const PopupMenuItem(value: 'paste', child: Text('Paste')),
-            ],
-            onSelected: (value) {
-              switch (value) {
-                case 'clear':
-                  _terminal.buffer.clear();
-                  break;
-                case 'copy':
-                  break;
-                case 'paste':
-                  break;
-              }
-            },
-          ),
-        ),
-      ),
-    );
-
-    overlay.insert(entry);
-    Future.delayed(const Duration(seconds: 2), () => entry.remove());
-  }
-
-  void _showSidePanel() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _SidePanelSheet(),
-    );
-  }
-}
-
-class _SidePanelSheet extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final files = ref.watch(filesProvider);
-
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.6,
-      decoration: BoxDecoration(
-        color: AppTheme.backgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 16),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppTheme.secondaryColor.withAlpha(80),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Quick Commands',
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: files.when(
-              data: (fileList) => ListView.builder(
-                itemCount: fileList.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    leading: const Icon(Icons.insert_drive_file),
-                    title: Text(fileList[index]),
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                  );
-                },
-              ),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
-            ),
-          ),
-        ],
       ),
     );
   }
