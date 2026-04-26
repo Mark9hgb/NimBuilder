@@ -133,7 +133,7 @@ class PerformanceService {
       'p50ResponseTime': p50ResponseTime,
       'p95ResponseTime': p95ResponseTime,
       'p99ResponseTime': p99ResponseTime,
-      'sessionDuration': _sessionDuration(),
+      'sessionDuration': _sessionDuration().inSeconds,
     };
   }
 

@@ -1,15 +1,7 @@
 import 'package:url_launcher/url_launcher.dart';
 
 class UrlService {
-  static const _supportedBrowsers = [
-    'com.android.chrome',
-    'com.android.browser',
-    'org.mozilla.firefox',
-    'com.sec.android.app.sbrowser',
-    'com.google.android.apps.chrome',
-  ];
-
-  Future<bool> openUrl(String url, {String? browserPackage}) async {
+  Future<bool> openUrl(String url) async {
     String finalUrl = url;
     
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
@@ -18,35 +10,8 @@ class UrlService {
 
     final uri = Uri.parse(finalUrl);
 
-    if (browserPackage != null) {
-      try {
-        final intent = await _launchViaIntent(uri, browserPackage);
-        if (intent) return true;
-      } catch (e) {
-        // Fall through to default
-      }
-    }
-
-    return _launchWithDefault(uri);
-  }
-
-  Future<bool> _launchViaIntent(Uri uri, String package) async {
-    try {
-      final result = await launchUrl(uri, mode: LaunchMode.externalApplication);
-      return result;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Future<bool> _launchWithDefault(Uri uri) async {
     if (await canLaunchUrl(uri)) {
       return await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-
-    final fallbackUri = Uri.parse('https://www.google.com/search?q=${uri.host}');
-    if (await canLaunchUrl(fallbackUri)) {
-      return await launchUrl(fallbackUri, mode: LaunchMode.externalApplication);
     }
 
     return false;
@@ -70,13 +35,14 @@ class UrlService {
     String? subject,
     String? body,
   }) async {
+    final queryParams = <String, String>{};
+    if (subject != null) queryParams['subject'] = subject;
+    if (body != null) queryParams['body'] = body;
+    
     final uri = Uri(
       scheme: 'mailto',
       path: to,
-      queryParameters: {
-        if (subject != null) 'subject': subject,
-        if (body != null) 'body': body,
-      },
+      queryParameters: queryParams.isNotEmpty ? queryParams : null,
     );
 
     if (await canLaunchUrl(uri)) {
@@ -93,7 +59,7 @@ class UrlService {
   }
 
   Future<void> sendSms(String phoneNumber, {String? body}) async {
-    final queryParams = body != null ? {'body': body} : null;
+    final queryParams = body != null ? <String, String>{'body': body} : null;
     final uri = Uri(
       scheme: 'sms',
       path: phoneNumber,
@@ -105,7 +71,7 @@ class UrlService {
   }
 
   Future<void> openMap(double lat, double lng, {String? label}) async {
-    final queryParams = label != null ? {'q': label} : null;
+    final queryParams = label != null ? <String, String>{'q': label} : null;
     final uri = Uri(
       scheme: 'geo',
       host: '$lat,$lng',

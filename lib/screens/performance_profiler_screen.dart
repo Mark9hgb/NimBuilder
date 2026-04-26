@@ -150,7 +150,7 @@ class _PerformanceProfilerScreenState extends ConsumerState<PerformanceProfilerS
           ),
         ),
         const SizedBox(height: 12),
-        _buildInfoTile('Duration', _formatDuration(stats['sessionDuration'] as Duration)),
+        _buildInfoTile('Duration', _formatDurationSeconds(stats['sessionDuration'] as int)),
         _buildInfoTile('P50', '${(stats['p50ResponseTime'] as double).toStringAsFixed(0)}ms'),
         _buildInfoTile('P95', '${(stats['p95ResponseTime'] as double).toStringAsFixed(0)}ms'),
         _buildInfoTile('P99', '${(stats['p99ResponseTime'] as double).toStringAsFixed(0)}ms'),
@@ -505,6 +505,11 @@ class _PerformanceProfilerScreenState extends ConsumerState<PerformanceProfilerS
     } else {
       return '${seconds}s';
     }
+  }
+
+  String _formatDurationSeconds(int seconds) {
+    final duration = Duration(seconds: seconds);
+    return _formatDuration(duration);
   }
 
   String _formatTime(DateTime time) {

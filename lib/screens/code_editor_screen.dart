@@ -192,9 +192,8 @@ class _CodeEditorScreenState extends ConsumerState<CodeEditorScreen> {
         final result = await terminalService.executeShellCommand(_contentController.text);
         _showOutput(result.output, result.success);
       } else {
-        final result = await terminalService.executeCommand(
-          '${_getRunCommand()} ${_currentFilePath.isNotEmpty ? _currentFilePath : <dynamic>('temp_script')}',
-        );
+        final scriptName = _currentFilePath.isNotEmpty ? _currentFilePath : 'temp_script';
+        final result = await terminalService.executeCommand('${_getRunCommand()} $scriptName');
         _showOutput(result.output, result.success);
       }
     } catch (e) {
