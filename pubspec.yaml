@@ -19,10 +19,7 @@ dependencies:
   flutter_services_binding: ^0.1.0
 
   # Terminal Emulation
-  xterm:
-    git:
-      url: https://github.com/TerminalStudio/xterm.dart
-      ref: main
+  xterm: ^4.0.0
 
   # State Management
   flutter_riverpod: ^2.5.1
